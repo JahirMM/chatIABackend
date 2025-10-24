@@ -1,0 +1,34 @@
+# 📦 Dependencias
+/node_modules/
+.pnpm/
+.pnpm-debug.log
+
+# 🧪 Testing
+/coverage/
+
+# ⚙️ Producción
+/dist/
+/build/
+
+# ⚠️ Archivos sensibles y temporales
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# 🧹 Misceláneos
+.DS_Store
+
+# 🧠 TypeScript
+*.tsbuildinfo
+
+# 🛠 IDEs y herramientas
+.vscode/
+.idea/
+*.swp
+
+# 🚫 Frontend específico (si no aplica)
+.next/
+.svelte-kit/
