@@ -1,5 +1,5 @@
 import { UserRepositoryInterface } from "@/users/domain/interfaces/UserRepository.interface";
-import { UserInsertInterface } from "@/users/domain/interfaces/UserCreate.interface";
+import { UserInsertInterface } from "@/users/domain/interfaces/UserInsert.interface";
 import { UserInterface } from "@/users/domain/interfaces/User.interface";
 
 import { ApiResponse } from "@/shared/application/ApiResponse";
