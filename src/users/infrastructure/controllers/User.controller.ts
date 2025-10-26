@@ -14,17 +14,18 @@ export class UserController {
     this.getUsersUseCase = new GetUsersUseCase(userRepository);
   }
 
-  async getUsers(req: Request, res: Response): Promise<Response> {
+  async getUsers(req: Request, res: Response): Promise<void> {
     try {
       const useCaseResult: ApiResponse<UserInterface[]> =
         await this.getUsersUseCase.execute();
 
       if (!useCaseResult.success) {
         if (useCaseResult.data?.length === 0) {
-          return res.status(404).json(useCaseResult);
+          res.status(404).json(useCaseResult);
+          return;
         }
 
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: useCaseResult.message,
           error: useCaseResult.error ?? {
@@ -32,14 +33,16 @@ export class UserController {
             message: "Invalid request",
           },
         });
+        return;
       }
 
-      return res.status(200).json(useCaseResult);
+      res.status(200).json(useCaseResult);
+      return;
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Unknown server error";
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: "Internal server error",
         error: {
@@ -47,6 +50,7 @@ export class UserController {
           message,
         },
       });
+      return;
     }
   }
 }
