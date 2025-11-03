@@ -1,7 +1,9 @@
 import { EnsureUserAndInsertMessageUseCase } from "@/conversations/application/EnsureUserAndInsertMessage.application";
 
+import { FindConversationByUserIdUseCase } from "@/conversations/application/FindConversationByUserId.application";
 import { InsertMessageWithUserDTO } from "@/conversations/application/DTOs/InsertMessageWithUserDTO";
 import { GetConversationsUseCase } from "@/conversations/application/GetConversations.application";
+import { FindUserByPhoneUseCase } from "@/users/application/FindByPhone.application";
 import { ApiResponse } from "@/shared/application/ApiResponse";
 
 import { ConversationRepository } from "@/conversations/infrastructure/repositories/Conversation.repository";
@@ -15,6 +17,8 @@ import { Request, Response } from "express";
 export class ConversationController {
   private readonly insertMessageUseCase: EnsureUserAndInsertMessageUseCase;
   private readonly getConversationsUseCase: GetConversationsUseCase;
+  private readonly findConversationByUserIdUseCase: FindConversationByUserIdUseCase;
+  private readonly findUserByPhoneUseCase: FindUserByPhoneUseCase;
 
   constructor() {
     const userRepository = new UserRepository();
@@ -28,6 +32,10 @@ export class ConversationController {
     this.getConversationsUseCase = new GetConversationsUseCase(
       conversationRepository
     );
+    this.findConversationByUserIdUseCase = new FindConversationByUserIdUseCase(
+      conversationRepository
+    );
+    this.findUserByPhoneUseCase = new FindUserByPhoneUseCase(userRepository);
   }
 
   async insertMessage(req: Request, res: Response): Promise<void> {
@@ -140,6 +148,64 @@ export class ConversationController {
         },
       });
       return;
+    }
+  }
+
+  async getConversationByPhone(req: Request, res: Response): Promise<void> {
+    try {
+      const { phone } = req.params;
+
+      if (!phone) {
+        res.status(400).json({
+          success: false,
+          message: "Phone is required",
+          error: {
+            code: "MISSING_PARAM",
+            message: "Missing 'phone' parameter in request",
+          },
+        });
+        return;
+      }
+
+      const userResult = await this.findUserByPhoneUseCase.execute(phone);
+
+      if (!userResult.data) {
+        res.status(404).json({
+          success: userResult.success,
+          message: userResult.message,
+          error: {
+            code: "USER_NOT_FOUND",
+            message: `No user found with phone ${phone}`,
+          },
+        });
+        return;
+      }
+
+      const conversationResult =
+        await this.findConversationByUserIdUseCase.execute(userResult.data.id);
+
+      if (!conversationResult.data) {
+        res.status(404).json({
+          success: conversationResult.success,
+          message: conversationResult.message,
+          error: {
+            code: "CONVERSATION_NOT_FOUND",
+            message: `No conversation found for user ${userResult.data.id}`,
+          },
+        });
+        return;
+      }
+
+      res.status(200).json(conversationResult);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: {
+          code: "INTERNAL_ERROR",
+          message: (error as Error).message || "Unexpected error occurred",
+        },
+      });
     }
   }
 }

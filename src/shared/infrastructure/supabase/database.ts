@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       conversations: {
         Row: {
+          human_override: boolean
           id: string
           latest_date: string
           start_date: string
@@ -23,6 +24,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          human_override?: boolean
           id?: string
           latest_date?: string
           start_date?: string
@@ -30,6 +32,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          human_override?: boolean
           id?: string
           latest_date?: string
           start_date?: string

@@ -5,4 +5,5 @@ export interface ConversationRepositoryInterface {
   findByUserId(user_id: string): Promise<ConversationInterface | null>;
   insertConversation(conversation: ConversationInsertInterface): Promise<ConversationInterface>;
   getConversations(): Promise<ConversationInterface[]>
+  findByPhone(phone: string): Promise<ConversationInterface | null>
 }

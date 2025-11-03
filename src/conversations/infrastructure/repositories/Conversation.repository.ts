@@ -48,4 +48,18 @@ export class ConversationRepository implements ConversationRepositoryInterface {
 
     return data ?? [];
   }
+
+  async findByPhone(phone: string): Promise<ConversationInterface | null> {
+    const { data, error } = await this.client
+      .from("conversations")
+      .select("*")
+      .eq("phone", phone)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Error fetching conversation: ${error.message}`);
+    }
+
+    return data;
+  }
 }
