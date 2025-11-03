@@ -3,4 +3,5 @@ import { MessageInterface } from "@/messages/domain/interfaces/Message.interface
 
 export interface MessageRepositoryInterface {
   insertMessage(message: MessageInsertInterface): Promise<MessageInterface>;
+  findMessagesByConversationId(conversationId: string): Promise<MessageInterface[]>
 }

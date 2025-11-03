@@ -5,6 +5,7 @@ import cors from "cors";
 
 import UserRoutes from "@/users/infrastructure/routes/User.routes";
 import ConversationRoutes from "@/conversations/infrastructure/routes/Conversation.routes";
+import MessageRoutes from "@/messages/infrastructure/routes/Message.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use("/api/v1", UserRoutes);
 app.use("/api/v1", ConversationRoutes);
+app.use("/api/v1", MessageRoutes)
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
