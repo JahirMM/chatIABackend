@@ -231,7 +231,7 @@ export class ConversationController {
 
       const { enabled } = req.body;
 
-      if (!enabled || typeof enabled !== "boolean") {
+      if (enabled === undefined || typeof enabled !== "boolean") {
         res.status(400).json({
           success: false,
           message: "enabled is required and must be a boolean.",
