@@ -1,9 +1,10 @@
 import { ConversationController } from "@/conversations/infrastructure/controllers/Conversation.controller";
 import { Router } from "express";
 
-const UserRoutes: Router = Router();
+const ConversationRoutes: Router = Router();
 const controller = new ConversationController();
 
-UserRoutes.post("/messages", (req, res) => controller.insertMessage(req, res));
+ConversationRoutes.post("/messages", (req, res) => controller.insertMessage(req, res));
+ConversationRoutes.get("/conversations", (req, res) => controller.getConversations(req, res))
 
-export default UserRoutes;
+export default ConversationRoutes;

@@ -1,8 +1,9 @@
+import { ConversationRepositoryInterface } from "@/conversations/domain/interfaces/ConversationRepository.interface";
 import { ConversationInsertInterface } from "@/conversations/domain/interfaces/ConversationInsert.interfaces";
 import { ConversationInterface } from "@/conversations/domain/interfaces/Conversation.interface";
 import { SupabaseService } from "@/shared/infrastructure/supabase/SupabaseClient";
 
-export class ConversationRepository implements ConversationRepository {
+export class ConversationRepository implements ConversationRepositoryInterface {
   private readonly client = new SupabaseService().getClient();
 
   constructor() {
@@ -37,5 +38,14 @@ export class ConversationRepository implements ConversationRepository {
     }
 
     return data;
+  }
+
+  async getConversations(): Promise<ConversationInterface[]> {
+    const { data, error } = await this.client.from("conversations").select("*");
+    if (error) {
+      throw new Error(`Error fetching conversations: ${error.message}`);
+    }
+
+    return data ?? [];
   }
 }

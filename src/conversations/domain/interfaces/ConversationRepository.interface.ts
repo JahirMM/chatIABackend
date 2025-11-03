@@ -4,4 +4,5 @@ import { ConversationInterface } from "@/conversations/domain/interfaces/Convers
 export interface ConversationRepositoryInterface {
   findByUserId(user_id: string): Promise<ConversationInterface | null>;
   insertConversation(conversation: ConversationInsertInterface): Promise<ConversationInterface>;
+  getConversations(): Promise<ConversationInterface[]>
 }

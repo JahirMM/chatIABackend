@@ -1,15 +1,20 @@
 import { EnsureUserAndInsertMessageUseCase } from "@/conversations/application/EnsureUserAndInsertMessage.application";
 
 import { InsertMessageWithUserDTO } from "@/conversations/application/DTOs/InsertMessageWithUserDTO";
+import { GetConversationsUseCase } from "@/conversations/application/GetConversations.application";
+import { ApiResponse } from "@/shared/application/ApiResponse";
 
 import { ConversationRepository } from "@/conversations/infrastructure/repositories/Conversation.repository";
 import { MessageRepository } from "@/messages/infrastructure/repositories/Message.repository";
 import { UserRepository } from "@/users/infrastructure/repositories/User.repository";
 
+import { ConversationInterface } from "@/conversations/domain/interfaces/Conversation.interface";
+
 import { Request, Response } from "express";
 
 export class ConversationController {
   private readonly insertMessageUseCase: EnsureUserAndInsertMessageUseCase;
+  private readonly getConversationsUseCase: GetConversationsUseCase;
 
   constructor() {
     const userRepository = new UserRepository();
@@ -18,6 +23,9 @@ export class ConversationController {
     this.insertMessageUseCase = new EnsureUserAndInsertMessageUseCase(
       userRepository,
       messageRepository,
+      conversationRepository
+    );
+    this.getConversationsUseCase = new GetConversationsUseCase(
       conversationRepository
     );
   }
@@ -75,6 +83,45 @@ export class ConversationController {
 
       if (!useCaseResult.success) {
         res.status(400).json(useCaseResult);
+        return;
+      }
+
+      res.status(200).json(useCaseResult);
+      return;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown server error";
+
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: {
+          code: "SERVER_ERROR",
+          message,
+        },
+      });
+      return;
+    }
+  }
+
+  async getConversations(req: Request, res: Response): Promise<void> {
+    try {
+      const useCaseResult: ApiResponse<ConversationInterface[]> =
+        await this.getConversationsUseCase.execute();
+      if (!useCaseResult.success) {
+        if (useCaseResult.data?.length === 0) {
+          res.status(404).json(useCaseResult);
+          return;
+        }
+
+        res.status(400).json({
+          success: false,
+          message: useCaseResult.message,
+          error: useCaseResult.error ?? {
+            code: "BAD_REQUEST",
+            message: "Invalid request",
+          },
+        });
         return;
       }
 
