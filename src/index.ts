@@ -8,7 +8,7 @@ import ConversationRoutes from "@/conversations/infrastructure/routes/Conversati
 import MessageRoutes from "@/messages/infrastructure/routes/Message.routes";
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(helmet());
@@ -17,8 +17,8 @@ app.use(express.json());
 
 app.use("/api/v1", UserRoutes);
 app.use("/api/v1", ConversationRoutes);
-app.use("/api/v1", MessageRoutes);
+app.use("/api/v1", MessageRoutes)
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
