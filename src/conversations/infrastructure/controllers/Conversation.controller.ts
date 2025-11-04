@@ -34,7 +34,8 @@ export class ConversationController {
       conversationRepository
     );
     this.getConversationsUseCase = new GetConversationsUseCase(
-      conversationRepository
+      conversationRepository,
+      userRepository
     );
     this.findConversationByUserIdUseCase = new FindConversationByUserIdUseCase(
       conversationRepository

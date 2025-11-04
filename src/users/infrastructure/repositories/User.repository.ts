@@ -70,4 +70,19 @@ export class UserRepository implements UserRepositoryInterface {
 
     return data ?? null;
   }
+
+  async findUsersByIds(
+    userIds: string[]
+  ): Promise<{ id: string; phone: string }[]> {
+    const { data, error } = await this.client
+      .from("users")
+      .select("id, phone")
+      .in("id", userIds);
+
+    if (error) {
+      throw new Error(`Error fetching users by IDs: ${error.message}`);
+    }
+
+    return data ?? [];
+  }
 }
