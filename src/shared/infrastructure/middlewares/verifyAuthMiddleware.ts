@@ -1,10 +1,15 @@
+import { AuthenticatedRequestInterface } from "@/shared/domain/interfaces/AuthenticatedRequestInterface";
 import { AuthService } from "@/shared/infrastructure/services/AuthService";
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 
 export class VerifyAuthMiddleware {
   private readonly authService = new AuthService();
 
-  async handle(req: Request, res: Response, next: NextFunction) {
+  async handle(
+    req: AuthenticatedRequestInterface,
+    res: Response,
+    next: NextFunction
+  ) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -30,27 +35,20 @@ export class VerifyAuthMiddleware {
       });
     }
 
-    // API Key interna (para backend autorizado)
-    if (token === process.env.INTERNAL_API_KEY) {
-      (req as any).auth = { type: "internal" };
-      return next();
-    }
+    const auth = await this.authService.verifyRequestToken(token);
 
-    // 2️oken Supabase (para usuarios autenticados)
-    const user = await this.authService.verifyToken(token);
-
-    if (!user) {
+    if (!auth) {
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired Supabase token",
+        message: "Invalid or expired authentication",
         error: {
-          code: "INVALID_SUPABASE_TOKEN",
-          message: "Invalid or expired Supabase token",
+          code: "INVALID_AUTH_TOKEN",
+          message: "Invalid or expired authentication token",
         },
       });
     }
 
-    (req as any).auth = { type: "supabase", user };
+    req.auth = auth;
     next();
   }
 }

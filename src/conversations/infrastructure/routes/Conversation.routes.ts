@@ -1,5 +1,5 @@
 import { ConversationController } from "@/conversations/infrastructure/controllers/Conversation.controller";
-import { VerifyAuthMiddleware } from "@/conversations/infrastructure/middlewares/verifyAuthMiddleware";
+import { VerifyAuthMiddleware } from "@/shared/infrastructure/middlewares/verifyAuthMiddleware";
 import { upload } from "@/shared/infrastructure/multerConfig";
 import { Router } from "express";
 
@@ -13,17 +13,22 @@ ConversationRoutes.post(
   upload.single("file"),
   (req, res) => controller.insertMessage(req, res)
 );
+
 ConversationRoutes.get("/conversations", (req, res) =>
   controller.getConversations(req, res)
 );
+
 ConversationRoutes.get(
   "/conversations/:phone",
+  (req, res, next) => verifyAuth.handle(req, res, next),
   controller.getConversationByPhone.bind(controller)
 );
+
 ConversationRoutes.patch(
   "/conversations/:conversationId/human-override",
   controller.updateHumanOverrideStatus.bind(controller)
 );
+
 ConversationRoutes.put(
   "/conversations/:conversationId",
   controller.updateTitle.bind(controller)
