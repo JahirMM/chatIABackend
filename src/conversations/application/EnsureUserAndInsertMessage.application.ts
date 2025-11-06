@@ -139,7 +139,7 @@ export class EnsureUserAndInsertMessageUseCase {
     dto: InsertMessageWithUserDTO
   ): Promise<ApiResponse<InsertMessageWithUserResponseDTO>> {
     if (dto.senderType === "user") {
-      // ✅ USAR RPC para atomicidad de user+conversation+message
+      // USAR RPC para atomicidad de user+conversation+message
       try {
         const nameValue = dto.name ?? "";
         const { message_id, user_id } =
@@ -202,7 +202,7 @@ export class EnsureUserAndInsertMessageUseCase {
     }
 
     if (dto.senderType === "ai" || dto.senderType === "admin") {
-      // 🚦 Flujo AI: NO crear usuario si no existe (misma lógica que ya manejabas)
+      // Flujo AI: NO crear usuario si no existe (misma lógica que ya manejabas)
       const ensured = await this.ensureUserAndConversationByPhone(
         dto.phone,
         undefined,

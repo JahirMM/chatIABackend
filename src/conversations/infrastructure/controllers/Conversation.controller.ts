@@ -60,7 +60,6 @@ export class ConversationController {
       const { senderType, phone, name, content } = req.body;
       const file = req.file;
 
-      // ✅ Validaciones
       if (!senderType || !["user", "ai", "admin"].includes(senderType)) {
         res.status(400).json({
           success: false,
@@ -91,7 +90,6 @@ export class ConversationController {
         return;
       }
 
-      // ✅ Construcción segura del DTO
       let obj: InsertMessageWithUserDTO;
 
       if (senderType === "user") {
@@ -111,7 +109,7 @@ export class ConversationController {
         return;
       }
 
-      // ✅ Si hay archivo, agregamos `media`
+      // Si hay archivo, agregamos `media`
       if (file) {
         obj.media = {
           fileBuffer: file.buffer,
@@ -121,7 +119,6 @@ export class ConversationController {
         };
       }
 
-      // ✅ Ejecutar el caso de uso
       const useCaseResult = await this.insertMessageUseCase.execute(obj);
 
       if (!useCaseResult.success) {

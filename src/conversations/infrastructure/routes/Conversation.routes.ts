@@ -1,12 +1,17 @@
 import { ConversationController } from "@/conversations/infrastructure/controllers/Conversation.controller";
+import { VerifyAuthMiddleware } from "@/conversations/infrastructure/middlewares/verifyAuthMiddleware";
 import { upload } from "@/shared/infrastructure/multerConfig";
 import { Router } from "express";
 
 const ConversationRoutes: Router = Router();
 const controller = new ConversationController();
+const verifyAuth = new VerifyAuthMiddleware();
 
-ConversationRoutes.post("/messages", upload.single("file"), (req, res) =>
-  controller.insertMessage(req, res)
+ConversationRoutes.post(
+  "/messages",
+  (req, res, next) => verifyAuth.handle(req, res, next),
+  upload.single("file"),
+  (req, res) => controller.insertMessage(req, res)
 );
 ConversationRoutes.get("/conversations", (req, res) =>
   controller.getConversations(req, res)
