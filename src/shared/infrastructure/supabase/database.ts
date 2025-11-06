@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_assistances: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          needs_human: boolean
+          reason: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          needs_human?: boolean
+          reason?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          needs_human?: boolean
+          reason?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_assistances_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           human_override: boolean
