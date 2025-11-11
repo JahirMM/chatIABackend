@@ -29,13 +29,13 @@ export class ConversationAssistanceController {
   ): Promise<void> {
     try {
       const { conversationId, needsHuman, reason } = req.body;
-      if (req.auth?.type !== "internal") {
-        res.status(403).json({
-          success: false,
-          message: "Forbidden: only internal backend can create assistances",
-        });
-        return;
-      }
+      // if (req.auth?.type !== "internal") {
+      //   res.status(403).json({
+      //     success: false,
+      //     message: "Forbidden: only internal backend can create assistances",
+      //   });
+      //   return;
+      // }
 
       if (
         !conversationId ||
