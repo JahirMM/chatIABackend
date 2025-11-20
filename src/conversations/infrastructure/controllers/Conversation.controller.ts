@@ -12,9 +12,15 @@ import { UserRepository } from "@/users/infrastructure/repositories/User.reposit
 
 import { InsertMessageWithUserDTO } from "@/conversations/application/DTOs/InsertMessageWithUserDTO";
 
-import { ConversationInterface } from "@/conversations/domain/interfaces/Conversation.interface";
+import { UpdateCategoryCardsUseCase } from "@/conversations/application/UpdateCategoryCards.application";
+
+import {
+  ConversationInterface,
+  ConversaionCategory,
+} from "@/conversations/domain/interfaces/Conversation.interface";
 
 import { Request, Response } from "express";
+import { GetConversationsResponseDTO } from "@/conversations/application/DTOs/GetConversationsResponseDTO";
 
 export class ConversationController {
   private readonly insertMessageUseCase: EnsureUserAndInsertMessageUseCase;
@@ -23,6 +29,7 @@ export class ConversationController {
   private readonly findUserByPhoneUseCase: FindUserByPhoneUseCase;
   private readonly updateHumanOverrideStatusUseCase: UpdateHumanOverrideStatusUseCase;
   private readonly updateTitleUseCase: UpdateTitleUseCase;
+  private readonly updateCategoryCardsUseCase: UpdateCategoryCardsUseCase;
 
   constructor() {
     const userRepository = new UserRepository();
@@ -44,6 +51,9 @@ export class ConversationController {
     this.updateHumanOverrideStatusUseCase =
       new UpdateHumanOverrideStatusUseCase(conversationRepository);
     this.updateTitleUseCase = new UpdateTitleUseCase(conversationRepository);
+    this.updateCategoryCardsUseCase = new UpdateCategoryCardsUseCase(
+      conversationRepository
+    );
   }
 
   private detectCategory(
@@ -163,7 +173,7 @@ export class ConversationController {
       if (typeof text === "string" && text.trim().length > 0)
         filters.text = text.trim();
 
-      const useCaseResult: ApiResponse<ConversationInterface[]> =
+      const useCaseResult: ApiResponse<GetConversationsResponseDTO[]> =
         await this.getConversationsUseCase.execute(filters);
 
       if (!useCaseResult.success) {
@@ -347,6 +357,67 @@ export class ConversationController {
             message: "Failed to update title",
           },
         });
+        return;
+      }
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: {
+          code: "INTERNAL_ERROR",
+          message: (error as Error).message || "Unexpected error occurred",
+        },
+      });
+    }
+  }
+
+  async updateCategoryCards(req: Request, res: Response): Promise<void> {
+    try {
+      const { conversationId } = req.params;
+
+      if (!conversationId) {
+        res.status(400).json({
+          success: false,
+          message: "conversationId is required",
+          error: {
+            code: "MISSING_PARAM",
+            message: "Missing 'conversationId' parameter in request",
+          },
+        });
+        return;
+      }
+
+      const { bucketId, category, alerts } = req.body as {
+        bucketId?: "alert" | "new" | "active" | "old" | "test";
+        category?: string | null;
+        alerts?: boolean;
+      };
+
+      // Permito dos formas:
+      // 1) Mandar bucketId (desde el frontend)
+      // 2) Mandar category + alerts directos (desde Postman)
+      let finalAlerts: boolean;
+      let finalCategory: ConversaionCategory | null;
+
+      if (bucketId) {
+        const isAlert = bucketId === "alert";
+        finalAlerts = isAlert;
+        finalCategory = isAlert ? null : (bucketId as ConversaionCategory);
+      } else {
+        finalAlerts = Boolean(alerts);
+        finalCategory = (category ?? null) as ConversaionCategory | null;
+      }
+
+      const result = await this.updateCategoryCardsUseCase.execute(
+        conversationId,
+        finalCategory,
+        finalAlerts
+      );
+
+      if (!result.success) {
+        res.status(500).json(result);
         return;
       }
 
