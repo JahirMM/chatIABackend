@@ -2,6 +2,7 @@ import { EnsureUserAndInsertMessageUseCase } from "@/conversations/application/E
 import { UpdateHumanOverrideStatusUseCase } from "@/conversations/application/UpdateHumanOverrideStatus.application";
 import { FindConversationByUserIdUseCase } from "@/conversations/application/FindConversationByUserId.application";
 import { GetConversationsUseCase } from "@/conversations/application/GetConversations.application";
+import { ConversationAssistanceRepository } from "@/conversationAssistances/infrastructure/repositories/ConversationAssistance.repository";
 import { UpdateTitleUseCase } from "@/conversations/application/UpdateTitle.application";
 import { FindUserByPhoneUseCase } from "@/users/application/FindByPhone.application";
 import { ApiResponse } from "@/shared/application/ApiResponse";
@@ -35,6 +36,7 @@ export class ConversationController {
     const userRepository = new UserRepository();
     const messageRepository = new MessageRepository();
     const conversationRepository = new ConversationRepository();
+    const assistanceRepository = new ConversationAssistanceRepository();
     this.insertMessageUseCase = new EnsureUserAndInsertMessageUseCase(
       userRepository,
       messageRepository,
@@ -49,7 +51,10 @@ export class ConversationController {
     );
     this.findUserByPhoneUseCase = new FindUserByPhoneUseCase(userRepository);
     this.updateHumanOverrideStatusUseCase =
-      new UpdateHumanOverrideStatusUseCase(conversationRepository);
+      new UpdateHumanOverrideStatusUseCase(
+        conversationRepository,
+        assistanceRepository
+      );
     this.updateTitleUseCase = new UpdateTitleUseCase(conversationRepository);
     this.updateCategoryCardsUseCase = new UpdateCategoryCardsUseCase(
       conversationRepository
