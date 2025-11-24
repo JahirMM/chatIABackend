@@ -25,6 +25,10 @@ app.use("/api/v1", MessageRoutes);
 app.use("/api/v1", ConversationAssistanceRoutes);
 app.use("/api/v1", Authrouter);
 
+app.get("/", (req, res) => {
+  res.send("API is running!");
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
