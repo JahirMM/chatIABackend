@@ -4,6 +4,8 @@ import { FindConversationByUserIdUseCase } from "../../../conversations/applicat
 import { GetConversationsUseCase } from "../../../conversations/application/GetConversations.application";
 import { ConversationAssistanceRepository } from "../../../conversationAssistances/infrastructure/repositories/ConversationAssistance.repository";
 import { UpdateTitleUseCase } from "../../../conversations/application/UpdateTitle.application";
+import { FindConversationByIdUseCase } from "../../../conversations/application/FindConversationById.application";
+import { MessageAttachmentRepository } from "../../../messageAttachments/infrastructure/repositories/MessageAttachment.repository";
 import { FindUserByPhoneUseCase } from "../../../users/application/FindByPhone.application";
 import { ApiResponse } from "../../../shared/application/ApiResponse";
 
@@ -29,6 +31,7 @@ export class ConversationController {
   private readonly findConversationByUserIdUseCase: FindConversationByUserIdUseCase;
   private readonly findUserByPhoneUseCase: FindUserByPhoneUseCase;
   private readonly updateHumanOverrideStatusUseCase: UpdateHumanOverrideStatusUseCase;
+  private readonly findConversationByIdUseCase: FindConversationByIdUseCase;
   private readonly updateTitleUseCase: UpdateTitleUseCase;
   private readonly updateCategoryCardsUseCase: UpdateCategoryCardsUseCase;
 
@@ -37,10 +40,13 @@ export class ConversationController {
     const messageRepository = new MessageRepository();
     const conversationRepository = new ConversationRepository();
     const assistanceRepository = new ConversationAssistanceRepository();
+    const attachmentRepository = new MessageAttachmentRepository();
     this.insertMessageUseCase = new EnsureUserAndInsertMessageUseCase(
       userRepository,
       messageRepository,
-      conversationRepository
+      conversationRepository,
+      assistanceRepository,
+      attachmentRepository
     );
     this.getConversationsUseCase = new GetConversationsUseCase(
       conversationRepository,
@@ -55,6 +61,9 @@ export class ConversationController {
         conversationRepository,
         assistanceRepository
       );
+    this.findConversationByIdUseCase = new FindConversationByIdUseCase(
+      conversationRepository
+    );
     this.updateTitleUseCase = new UpdateTitleUseCase(conversationRepository);
     this.updateCategoryCardsUseCase = new UpdateCategoryCardsUseCase(
       conversationRepository
@@ -408,8 +417,19 @@ export class ConversationController {
 
       if (bucketId) {
         const isAlert = bucketId === "alert";
-        finalAlerts = isAlert;
-        finalCategory = isAlert ? null : (bucketId as ConversaionCategory);
+        finalAlerts = isAlert; // Siempre será true si bucketId es 'alert'
+
+        if (isAlert) {
+          // Si se mueve a 'alert', mantenemos la categoría existente.
+          const convResult = await this.findConversationByIdUseCase.execute(
+            conversationId
+          );
+          // Si no tiene categoría (es nueva), la ponemos en 'new'.
+          finalCategory = convResult.data?.category ?? "new";
+        } else {
+          // Si se mueve a otra columna, esa es la nueva categoría.
+          finalCategory = bucketId as ConversaionCategory;
+        }
       } else {
         finalAlerts = Boolean(alerts);
         finalCategory = (category ?? null) as ConversaionCategory | null;

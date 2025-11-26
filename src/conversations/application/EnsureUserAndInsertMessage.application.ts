@@ -1,6 +1,9 @@
 import { ConversationRepositoryInterface } from "../domain/interfaces/ConversationRepository.interface";
 import { FindConversationByUserIdUseCase } from "./FindConversationByUserId.application";
 import { InsertConversationUseCase } from "./InsertConversation.application";
+import { FindConversationByIdUseCase } from "./FindConversationById.application";
+import { ConversationAssistanceRepository } from "../../conversationAssistances/infrastructure/repositories/ConversationAssistance.repository";
+import { InsertConversationAssistanceUseCase } from "../../conversationAssistances/application/InsertConversationAssistance.application";
 
 import { MessageAttachmentRepository } from "../../messageAttachments/infrastructure/repositories/MessageAttachment.repository";
 import { UploadAttachmentUseCase } from "../../messageAttachments/application/UploadAttachment.application";
@@ -22,12 +25,15 @@ export class EnsureUserAndInsertMessageUseCase {
   private readonly insertMessageUseCase: InsertMessageUseCase;
   private readonly insertConversationUserCase: InsertConversationUseCase;
   private readonly findConversationByUserIdUseCase: FindConversationByUserIdUseCase;
+  private readonly findConversationByIdUseCase: FindConversationByIdUseCase;
+  private readonly insertConversationAssistanceUseCase: InsertConversationAssistanceUseCase;
   private readonly uploadAttachmentUseCase: UploadAttachmentUseCase;
 
   constructor(
     private readonly userRepository: UserRepositoryInterface,
     private readonly messageRepository: MessageRepositoryInterface,
     private readonly conversationRepository: ConversationRepositoryInterface,
+    private readonly conversationAssistanceRepository = new ConversationAssistanceRepository(),
     private readonly attachmentRepository = new MessageAttachmentRepository()
   ) {
     this.insertUserUseCase = new InsertUserUseCase(this.userRepository);
@@ -40,6 +46,15 @@ export class EnsureUserAndInsertMessageUseCase {
     this.findConversationByUserIdUseCase = new FindConversationByUserIdUseCase(
       this.conversationRepository
     );
+    this.findConversationByIdUseCase = new FindConversationByIdUseCase(
+      this.conversationRepository
+    );
+    this.insertConversationAssistanceUseCase =
+      new InsertConversationAssistanceUseCase(
+        this.conversationAssistanceRepository,
+        this.conversationRepository,
+        this.findConversationByIdUseCase
+      );
     this.uploadAttachmentUseCase = new UploadAttachmentUseCase(
       this.attachmentRepository
     );
@@ -142,14 +157,55 @@ export class EnsureUserAndInsertMessageUseCase {
     if (dto.senderType === "user") {
       // USAR RPC para atomicidad de user+conversation+message
       try {
-        const nameValue = dto.name ?? "";
-        const { message_id, user_id } =
+        const nameValue = dto.name ?? "No name"; // Asegurarse de que el nombre no sea nulo
+        const rpcResult =
           await this.conversationRepository.insertMessageCascade({
             phone: dto.phone,
             name: nameValue,
             content: dto.content, // puede ser ""
             sender: "user",
           });
+
+        const { message_id, user_id } = rpcResult;
+        let conversation_id = rpcResult.conversation_id;
+
+        // Si el RPC no devuelve conversation_id (usuario existente), lo buscamos.
+        if (!conversation_id) {
+          const conv = await this.conversationRepository.findByUserId(user_id);
+          if (conv) conversation_id = conv.id;
+        }
+
+        console.log(
+          `[EnsureUserAndInsertMessage] Processing message for conversation_id: ${conversation_id}, user_id: ${user_id}`
+        );
+        // Detectar si se necesita asistencia
+        const assistanceKeywords = [
+          "ayuda",
+          "asistencia",
+          "asesor",
+          "problema",
+        ];
+        const needsAssistance = assistanceKeywords.some((keyword) =>
+          dto.content.toLowerCase().includes(keyword)
+        );
+
+        console.log(
+          `[EnsureUserAndInsertMessage] Needs assistance: ${needsAssistance} for content: "${dto.content}"`
+        );
+        if (needsAssistance && conversation_id) {
+          console.log(
+            `[ASSISTANCE] Keyword detected. Creating assistance for conversation ${conversation_id}`
+          );
+          await this.insertConversationAssistanceUseCase.execute({
+            conversation_id: conversation_id,
+            needs_human: true,
+            reason: `El usuario mencionó: "${dto.content}"`,
+          });
+        } else if (needsAssistance) {
+          console.error(
+            `[ASSISTANCE] Keyword detected, but could not find conversation_id for user ${user_id}`
+          );
+        }
 
         // Si viene media, subirla; si falla, borramos el mensaje insertado por el RPC
         if (dto.media) {

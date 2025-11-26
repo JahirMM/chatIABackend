@@ -1,8 +1,12 @@
-import { ConversaionCategory, ConversationInterface } from "./Conversation.interface";
+import {
+  ConversaionCategory,
+  ConversationInterface,
+} from "./Conversation.interface";
 import { ConversationInsertInterface } from "./ConversationInsert.interfaces";
 import { InsertMessageCascadeResult } from "./InsertMessageCascadeResult.interface";
 
 export interface ConversationRepositoryInterface {
+  findById(id: string): Promise<ConversationInterface | null>;
   findByUserId(user_id: string): Promise<ConversationInterface | null>;
   insertConversation(
     conversation: ConversationInsertInterface

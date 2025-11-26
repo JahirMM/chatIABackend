@@ -1,5 +1,7 @@
 import { FindConversationAssistanceByConversationIdUseCase } from "../../../conversationAssistances/application/FindByConversationId.application";
 
+import { FindConversationByIdUseCase } from "../../../conversations/application/FindConversationById.application";
+import { ConversationRepository } from "../../../conversations/infrastructure/repositories/Conversation.repository";
 import { ConversationAssistanceRepository } from "../../../conversationAssistances/infrastructure/repositories/ConversationAssistance.repository";
 
 import { ResolveConversationAssistanceUseCase } from "../../../conversationAssistances/application/ResolveConversationAssistance.application";
@@ -15,8 +17,16 @@ export class ConversationAssistanceController {
 
   constructor() {
     const repository = new ConversationAssistanceRepository();
+    const conversationRepository = new ConversationRepository();
+    const findConversationByIdUseCase = new FindConversationByIdUseCase(
+      conversationRepository
+    );
     this.insertConversationAssistanceUseCase =
-      new InsertConversationAssistanceUseCase(repository);
+      new InsertConversationAssistanceUseCase(
+        repository,
+        conversationRepository,
+        findConversationByIdUseCase
+      );
     this.findConversationAssistanceByConversationIdUseCase =
       new FindConversationAssistanceByConversationIdUseCase(repository);
     this.resolveConversationAssistanceUseCase =

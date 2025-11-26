@@ -14,6 +14,35 @@ export class ConversationRepository implements ConversationRepositoryInterface {
     this.client = new SupabaseService().getClient();
   }
 
+  async findById(id: string): Promise<ConversationInterface | null> {
+    const { data, error } = await this.client
+      .from("conversations")
+      .select(
+        "id, user_id, title, start_date, latest_date, human_override, category, alerts"
+      )
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Error fetching conversation by ID: ${error.message}`);
+    }
+
+    if (!data) return null;
+
+    const conv: ConversationInterface = {
+      id: String(data.id),
+      user_id: String(data.user_id),
+      title: String(data.title ?? ""),
+      start_date: String(data.start_date),
+      latest_date: String(data.latest_date),
+      human_override: Boolean(data.human_override),
+      category: (data.category as ConversaionCategory) ?? null,
+      alerts: Boolean(data.alerts),
+    };
+
+    return conv;
+  }
+
   async findByUserId(user_id: string): Promise<ConversationInterface | null> {
     const { data, error } = await this.client
       .from("conversations")
