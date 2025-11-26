@@ -8,6 +8,7 @@ import UserRoutes from "./users/infrastructure/routes/User.routes";
 import ConversationRoutes from "./conversations/infrastructure/routes/Conversation.routes";
 import MessageRoutes from "./messages/infrastructure/routes/Message.routes";
 import ConversationAssistanceRoutes from "./conversationAssistances/infrastructure/routes/ConversationAssistance.routes";
+import ConversationCategoryRoutes from "./conversationCategories/infrastructure/routes/ConversationCategory.routes";
 import Authrouter from "./auth/infrastructure/routes/AuthRoutes";
 
 const app = express();
@@ -23,6 +24,7 @@ app.use("/api/v1", UserRoutes);
 app.use("/api/v1", ConversationRoutes);
 app.use("/api/v1", MessageRoutes);
 app.use("/api/v1", ConversationAssistanceRoutes);
+app.use("/api/v1", ConversationCategoryRoutes);
 app.use("/api/v1", Authrouter);
 
 app.listen(PORT, () => {
